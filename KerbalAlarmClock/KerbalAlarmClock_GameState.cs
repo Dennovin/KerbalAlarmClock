@@ -14,18 +14,24 @@ namespace KerbalAlarmClock
         internal static Vessel LastVessel = null;
         internal static CelestialBody LastSOIBody = null;
         internal static ITargetable LastVesselTarget = null;
+        internal static Int32 LastWarpIndex = 0;
+
+        internal static Double LastVesselAltitude = 0;
 
         internal static String CurrentSaveGameName = "";
         internal static GameScenes CurrentGUIScene = GameScenes.LOADING;
         internal static Vessel CurrentVessel = null;
         internal static CelestialBody CurrentSOIBody = null;
         internal static ITargetable CurrentVesselTarget = null;
+        internal static Int32 CurrentWarpIndex = 0;
+        internal static Double CurrentVesselAltitude = 0;
 
         internal static Boolean ChangedSaveGameName { get { return (LastSaveGameName != CurrentSaveGameName); } }
         internal static Boolean ChangedGUIScene { get { return (LastGUIScene != CurrentGUIScene); } }
         internal static Boolean ChangedVessel { get { if (LastVessel == null) return true; else return (LastVessel != CurrentVessel); } }
         internal static Boolean ChangedSOIBody { get { if (LastSOIBody == null) return true; else return (LastSOIBody != CurrentSOIBody); } }
         internal static Boolean ChangedVesselTarget { get { if (LastVesselTarget == null) return true; else return (LastVesselTarget != CurrentVesselTarget); } }
+        internal static Boolean ChangedWarpIndex { get { return LastWarpIndex!=CurrentWarpIndex; } }
 
         //The current UT time - for alarm comparison
         internal static KSPDateTime CurrentTime = new KSPDateTime(0);
@@ -164,12 +170,18 @@ namespace KerbalAlarmClock
         //do null checks on all these!!!!!
         internal static void SetCurrentGUIStates()
         {
-           KACWorkerGameState.CurrentGUIScene = HighLogic.LoadedScene;
+            KACWorkerGameState.CurrentGUIScene = HighLogic.LoadedScene;
+            KACWorkerGameState.CurrentWarpIndex = TimeWarp.CurrentRateIndex;
+            if (HighLogic.LoadedScene == GameScenes.FLIGHT)
+                KACWorkerGameState.CurrentVesselAltitude = FlightGlobals.ActiveVessel.altitude;
         }
 
         internal static void SetLastGUIStatesToCurrent()
         {
-           KACWorkerGameState.LastGUIScene =KACWorkerGameState.CurrentGUIScene;
+            KACWorkerGameState.LastGUIScene = KACWorkerGameState.CurrentGUIScene;
+            KACWorkerGameState.LastWarpIndex = KACWorkerGameState.CurrentWarpIndex;
+            if (HighLogic.LoadedScene == GameScenes.FLIGHT)
+                KACWorkerGameState.LastVesselAltitude = KACWorkerGameState.CurrentVesselAltitude;
         }
 
         internal static void SetCurrentFlightStates()

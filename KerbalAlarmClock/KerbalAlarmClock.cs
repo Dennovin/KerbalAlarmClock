@@ -142,6 +142,8 @@ namespace KerbalAlarmClock
             GameEvents.onGameSceneLoadRequested.Add(OnGameSceneLoadRequestedForAppLauncher);
             GameEvents.Contract.onContractsLoaded.Add(ContractsReady);
 
+            GameEvents.onTimeWarpRateChanged.Add(TimeWarpRateChanged);
+
             blnFilterToVessel = false;
             if (HighLogic.LoadedScene == GameScenes.TRACKSTATION ||
                 HighLogic.LoadedScene == GameScenes.FLIGHT)
@@ -212,6 +214,8 @@ namespace KerbalAlarmClock
             GameEvents.onGameSceneLoadRequested.Remove(OnGameSceneLoadRequestedForAppLauncher);
             GameEvents.Contract.onContractsLoaded.Remove(ContractsReady);
 
+            GameEvents.onTimeWarpRateChanged.Remove(TimeWarpRateChanged);
+
             DestroyDropDowns();
 
             DestroyToolbarButton(btnToolbarKAC);
@@ -232,11 +236,46 @@ namespace KerbalAlarmClock
             blnContractsSystemReady = true;
         }
 
+
+
+        Int32 MaxWarp = 0;
+
+
+        void TimeWarpRateChanged()
+        {
+            //LogFormatted("R:{0}, I:{1}, MP:{2}", TimeWarp.CurrentRate, TimeWarp.CurrentRateIndex, TimeWarp.MaxPhysicsRate);
+            Int32 MaxIndex=0;
+            if(HighLogic.LoadedScene== GameScenes.FLIGHT){
+                LogFormatted("changed warp-{0}", FlightGlobals.ActiveVessel.altitude);
+
+                //LogFormatted("Limits:{0}",TimeWarp.fetch.altitudeLimits.Length);
+                //for (int i = 0; i < TimeWarp.fetch.altitudeLimits.Length; i++)
+                //{
+                //    LogFormatted("L{0}:{1}", i, TimeWarp.fetch.altitudeLimits[i]);
+                //    LogFormatted("Limit for {0}:{1} <= {2}", i, TimeWarp.fetch.GetAltitudeLimit(i, FlightGlobals.ActiveVessel.mainBody), FlightGlobals.ActiveVessel.altitude);
+                //    if(FlightGlobals.ActiveVessel.altitude<TimeWarp.fetch.GetAltitudeLimit(i,FlightGlobals.ActiveVessel.mainBody))
+                //        break;
+                //    MaxIndex = i;
+                //}
+
+                //if (MaxIndex!=MaxWarp)
+                //{
+                //    LogFormatted("Old:{0}, New:{1}",MaxWarp,MaxIndex);
+                //    MaxWarp = MaxIndex;
+                //}
+                //LogFormatted("{0},{1}", MaxWarp, MaxIndex);
+
+            }
+        }
+
         #region "Update Code"
+
+
         //Update Function - Happens on every frame - this is where behavioural stuff is typically done
         internal override void Update()
         {
             KACWorkerGameState.SetCurrentGUIStates();
+
             //if scene has changed
             if (KACWorkerGameState.ChangedGUIScene)
                 LogFormatted("Scene Change from '{0}' to '{1}'", KACWorkerGameState.LastGUIScene.ToString(), KACWorkerGameState.CurrentGUIScene.ToString());
@@ -255,7 +294,27 @@ namespace KerbalAlarmClock
                 //tag these for next time round
                 LastGameUT = Planetarium.GetUniversalTime();
                 LastGameVessel = FlightGlobals.ActiveVessel;
+
+                //If the warp rate came down
+                if (KACWorkerGameState.ChangedWarpIndex)
+                {
+                    LogFormatted("WarpChanged");
+                    if (KACWorkerGameState.LastWarpIndex > KACWorkerGameState.CurrentWarpIndex)
+                    {
+                        LogFormatted("WarpDown");
+                        //was it due to altitude
+                        Double altLimit = TimeWarp.fetch.GetAltitudeLimit(KACWorkerGameState.LastWarpIndex, FlightGlobals.ActiveVessel.mainBody);
+
+                        LogFormatted("{0}-{1}-{2}", KACWorkerGameState.LastVesselAltitude, altLimit, FlightGlobals.ActiveVessel.altitude);
+
+                        if (KACWorkerGameState.LastVesselAltitude > altLimit && altLimit > FlightGlobals.ActiveVessel.altitude)
+                        {
+                            LogFormatted("WARP change due to altitude");
+                        }
+                    }
+                }
             }
+
             KACWorkerGameState.SetLastGUIStatesToCurrent();
         }
         
@@ -1746,10 +1805,10 @@ namespace KerbalAlarmClock
 				if (game != null && game.flightState != null && game.compatible)
 				{
 					//straight to spacecenter
-					HighLogic.CurrentGame = game;
-					HighLogic.LoadScene(GameScenes.SPACECENTER);
+					//HighLogic.CurrentGame = game;
+					//HighLogic.LoadScene(GameScenes.SPACECENTER);
                     //HighLogic.LoadScene(GameScenes.TRACKSTATION);
-					return;
+					//return;
 
 					Int32 FirstVessel;
 					Boolean blnFoundVessel = false;
